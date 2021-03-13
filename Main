@@ -256,8 +256,8 @@ public class Minimax {
 	//TODO wierd stuff, dont put value in the right place
 	//sets the player in a specific location, used by the computer
 	private void setBoardValue(Node node, String player, int[] cord) {
-//		if(cord[0] > node.gameBoard.length - 1 || cord[1] > node.gameBoard.length - 1|| cord[0] < 0 || cord[1] < 0)
-//			throw new IllegalStateException();
+		if(cord[0] > node.gameBoard.length - 1 || cord[1] > node.gameBoard.length - 1|| cord[0] < 0 || cord[1] < 0)
+			throw new IllegalStateException();
 		
 		 node.gameBoard[1][1] = player;
 		 //printBoard(node.gameBoard);
@@ -410,7 +410,8 @@ public class Minimax {
 			for(int i = 0; i < list.size(); ++i) {
 				var cord = list.get(i);
 				
-				node.gameBoard[cord[0]][cord[1]] = node.player;
+				//problem method
+				//node.gameBoard[cord[0]][cord[1]] = node.player;
 				
 				int score = minMax(node, node.player, node.depth + 1, node.alpha, node.beta);
 				
@@ -467,7 +468,7 @@ public class Minimax {
 	//makes the cpu move and checks for win if no win then players turn again
 	private void cpuMove(Node node) {
 	
-		//System.out.println(getCpuMove() + " är jag null?");
+		System.out.println(getCpuMove() + " är jag null?");
 		long start = System.currentTimeMillis();
 		minMax(node, node.cpu, node.depth, node.alpha, node.beta); 
 		System.out.println("Datorn valde " + node.gameBoard[0][1] + " på " + (System.currentTimeMillis() - start) + "ms");
