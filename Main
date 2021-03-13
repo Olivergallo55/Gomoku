@@ -1,0 +1,517 @@
+import java.util.*;
+
+public class Minimax {
+	
+	private Scanner scan = new Scanner(System.in);
+	
+	private static int MAX_DEPTH = 4;
+	private Coordinates cpuMove;
+	
+	/*
+	 * Initialize state for machine a.k.a clean start
+	 */
+	private Node initilizeMachine(String[][] gameBoard) {
+		Node node = new Node();
+		node.gameBoard = gameBoard;
+		node.player = "X";
+		
+		return node;
+	}
+	
+	/*
+	 * If nobody won, then its a draw else if there are no more space then its also a draw
+	 * 
+	 * @param a node object
+	 * @return check if it is a draw
+	 * */
+	 private boolean checkDraw(Node node, String player) {
+		 return checkWin(node, player) == false || checkEmptySpace(node) == false;  
+	 }
+	 
+	//check for empty spaces, return false if there aren't any 
+	private boolean checkEmptySpace(Node node) {
+		for(int row = 0; row < node.gameBoard.length; row++){ 
+			for(int column = 0; column < node.gameBoard.length; column++) 
+				if(node.gameBoard[row][column] == null) {
+					System.out.println(node.gameBoard[row][column]);
+					return true;
+			}
+		}
+		return false;
+	}
+
+
+	
+	
+	/*
+     * Method to show the board as a starting phase
+	 * @param a double String array to display the 8x8 board 
+	 * */	
+    private void printBoard(String[][] spelBord) {
+		int bordStorlek = spelBord.length;
+		System.out.println("Spelplanen: ");
+		System.out.print("      " + 1 );
+		for(int i = 2; i < 9; i++) {
+			System.out.print("   " +  i + "");
+		}
+		System.out.print('\n' + "    ---------------------------------" + '\n');
+		for(int rad = 0; rad < bordStorlek; rad++) {
+			System.out.print(rad + 1 + "   |");
+			for(int kolumn = 0; kolumn < bordStorlek; kolumn++) {
+				if(spelBord[rad][kolumn] == null) System.out.print("  " + " |");
+				else System.out.print(" " + spelBord[rad][kolumn] + " |");
+			}
+			System.out.print('\n' + "    ---------------------------------" + '\n');
+		}
+	}
+	
+	/*
+	 * Gets the player input with a scanner
+	 * @return the players input as an int
+	 */
+	private int getPlayerInput() {
+		System.out.println("Vill du börja spelet? ja(1), nej(0):");
+		int input = scan.nextInt();
+		return input;
+	}
+	
+	/*
+	 * Checks the input from the player
+	 */
+	private int[] readPlayerInput() {
+		int[] input = new int[2];
+		System.out.println("Vilken rad väljer du: ");
+		int rad = scan.nextInt() -1;
+		input[0] = rad;
+		System.out.println("Vilken kolumn väljer du: ");
+		int kolumn = scan.nextInt() -1;
+		input[1] = kolumn;
+		
+
+		return input;
+	}
+	
+	/*
+	 * Checks if the piece is outside of range or already occupied by a node
+	 * @return the given input
+	 */
+	private int[] checkPlayerInput(Node node) {
+		int[] check = readPlayerInput();
+		if(check[0] >= 8 || check[0] < 0 || check[1] >= 8 || check[1] < 0 ||
+				node.gameBoard[check[0]][check[1]] == "O" || node.gameBoard[check[0]][check[1]] == "X") { 
+			check = readPlayerInput();
+			System.out.println("Du kan inte välja den alternativet");
+		}
+		
+		return check;
+	}
+	
+	/*
+	 * Method to check if there is a win
+	 */
+	private boolean checkWin(Node node, String player) {
+		return checkWinRow(node, node.player) == true || checkWinColumn(node, player) == true || checkWinDiagonal(node, player) == true ? true : false;
+	}
+	
+	/*
+	 * Method Checks for win in the row, if it have 5 in a row it returns true
+	 * Contains checks, check for null or if the spot is already taken the counter wont update
+	 * @return if there is five in a row or not
+	 */
+	private boolean checkWinRow(Node node, String player) {
+		
+	      int count = 0;
+	       
+	      for(int row = 0; row < node.gameBoard.length; row++) {
+	    	  count = 0;//update count --> could be just inatilized here
+	    	  for(int col = 0; col < node.gameBoard[row].length; col++) {
+	    		  if(node.gameBoard[row][col] == player && count < 5) {
+	    			 
+	    			  ++count;
+	    			  if(count >= 5)
+	    			  	return true;
+	    			  
+	    		  }else {
+	    			  count = 0;
+	    		  }
+	    	  }
+	      }
+	    	 
+	        return false;
+	    }
+	
+	/*
+	 * Method Checks for win in the column, if it have 5 in a row it returns true
+	 * Contains checks, check for null or if the spot is already taken the counter wont update
+	 * @return if there is five in a column or not
+	 */
+	private boolean checkWinColumn(Node node, String player) {
+
+	      int count = 0;
+	      
+	      for(int row = 0; row < node.gameBoard.length; row++) {
+	    	  count = 0;//update count
+	    	  for(int col = 0; col < node.gameBoard[row].length; col++) {
+	    		  if(node.gameBoard[col][row] == player && count < 5) {
+	    			  		++count;
+	    			  		if(count >= 5)
+	    			  			return true;
+	    		  }else {
+	    			  count = 0;
+	    		  }
+	    	  }
+	      }
+	        return false;
+	}
+	
+	/*
+	 * First from right to left
+	 * Second is left to right
+	 */
+	private boolean checkWinDiagonal(Node node, String player){
+		return getWinDiagonalLeft(node, player) || getWinDiagonalRight(node, player);
+    }
+	
+	/*
+	 * Detects winner diagonally going from the left side to the right
+	 * First part of the method detects win the left half of the matrix
+	 * The second half of the method detects win the right half of the matrix
+	 * 
+	 * @param node gives access to the player and to the board   
+	 * @return true if there is 5 in a row for a player
+	 */
+	private boolean getWinDiagonalLeft(Node node, String player) {
+		
+		int count = 0;
+	    for (int k = node.gameBoard.length - 1; k > -1; k--) {
+	    	count = 0;//reset the counter
+	        for (int row = 0, col = k; row < node.gameBoard.length && col < node.gameBoard.length; row++, col++) {
+	            if(node.gameBoard[row][col] == player && count < 5) {
+	                ++count;
+	                if(count >= 5)
+	                    return true;
+	            }else {
+	                count = 0;
+	            }
+	        }
+	    }
+	    count = 0;
+	    for (int k = 1; k < node.gameBoard.length; k++) {
+	    	count = 0;//reset the counter
+	        for (int row = k, col = 0; row <node.gameBoard.length && col < node.gameBoard[row].length; row++, col++) {
+	            if(node.gameBoard[col][row] == player && count < 5) {
+	                ++count;
+	                if(count >= 5)
+	                    return true;
+	            }else {
+	                count = 0;
+	            }
+	        }
+	    }
+	    return false;
+	}
+	
+	/*
+	 * Detects winner diagonally going from the right side to the left
+	 * First part of the method detects win the left half of the matrix
+	 * The second half of the method detects win the right half of the matrix
+	 * 
+	 * @param node gives access to the player and to the board   
+	 * @return true if there is 5 in a row for a player
+	 */
+	private boolean getWinDiagonalRight(Node node, String player) {
+		 int count = 0;
+		    for (int k = 0; k < node.gameBoard.length; k++) {
+		    	count = 0;
+		        for (int row = k, col = 0; row >= 0 && col < node.gameBoard[row].length; row--, col++) {
+		            if(node.gameBoard[row][col] == player && count < 5) {
+		                ++count;
+		                if(count >= 5)
+		                    return true;
+		            }else {
+		                count = 0;
+		            }
+		        }
+		    }
+		    count = 0;
+		    for (int k = 1; k < node.gameBoard.length; k++) {
+		    	count = 0;
+		        for (int row = node.gameBoard.length - 1, col = k; row >= 0 && col < node.gameBoard[row].length; row--, col++) {
+		            if(node.gameBoard[col][row] == player && count < 5) {
+		                ++count;
+		                if(count >= 5)
+		                    return true;
+		            }else {
+		                count = 0;
+		            }
+		        }
+		    }
+		    return false;
+	}
+	
+	//gets the value of the board
+	private String getBoardValue(Node node, int x, int y) {
+		if(x > node.gameBoard.length - 1 || y > node.gameBoard.length - 1|| x < 0 || y < 0)
+			return null;
+		return node.gameBoard[x][y];
+	}
+	
+	//sets the player in a specific location, used by the computer
+	private void setBoardValue(Node node, String player, int x, int y) {
+		if(x > node.gameBoard.length - 1 || y > node.gameBoard.length - 1|| x < 0 || y < 0)
+			throw new IllegalStateException();
+			 
+		 node.gameBoard[x][y] = player;
+		 printBoard(node.gameBoard);
+	}
+	 
+	//check for successor move (all possible moves) and the values around it
+	private List<Coordinates> getSuccessorMove(Node node){
+		List<Coordinates> list= new ArrayList<>();
+		
+		for(int i = 0; i < node.gameBoard.length; i++) {
+			for(int j = 0; j < node.gameBoard.length; j++) {
+				if(getBoardValue(node,i,j) == null && hasAroundValue(node,i,j))
+					list.add(new Coordinates(i,j));
+			}
+		}
+		return list;
+	}
+	
+	//check if there are any tokens near the value
+	private boolean hasAroundValue(Node node, int x, int y) {
+		return getBoardValue(node, x-1,y) == "O" ||
+			   getBoardValue(node, x-1,y) == "X" ||
+			   getBoardValue(node, x+1,y) == "O" ||
+			   getBoardValue(node, x+1,y) == "X" ||
+			   getBoardValue(node, x,y+1) == "O" ||
+			   getBoardValue(node, x,y+1) == "X" ||
+			   getBoardValue(node, x,y-1) == "O" ||
+			   getBoardValue(node, x,y-1) == "X" ||
+			   getBoardValue(node, x+1,y+1) == "O" ||
+			   getBoardValue(node, x+1,y+1) == "X" ||
+			   getBoardValue(node, x-1,y-1) == "O" ||
+			   getBoardValue(node, x-1,y-1) == "X" ||
+			   getBoardValue(node, x+1,y-1) == "O" ||
+			   getBoardValue(node, x+1,y-1) == "X" ||
+			   getBoardValue(node, x-1,y+1) == "O" ||
+			   getBoardValue(node, x-1,y+1) == "X";
+	}
+
+	private int getScore(Node node) {
+		int score = 1;//start score
+		
+		//go through the matrix 
+		for(int row = 0; row < node.gameBoard.length; row++) {
+			int count = 1;
+			for(int column = 0; column < node.gameBoard.length; column++) {
+				int nextInRow = column;//to not to reset column
+				//go through vertically
+				while(node.gameBoard[nextInRow][row] == node.player) {
+					score *= count;//give point
+					count++;//count amount in the row
+					nextInRow++;//go to next position on the right
+					
+					if(nextInRow < node.gameBoard.length)
+						break;
+				}
+				//go through horizontally
+				int nextInColumn = row;
+				while(node.gameBoard[column][nextInColumn] == node.player) {
+					score *= count;
+					count++;
+					nextInColumn++;
+				
+					if(nextInColumn < node.gameBoard.length)
+						break;
+				}
+				
+				//Diagonally left to right 
+				int nextPositionRow = row;
+				int nextPositionColumn = column;
+				while(node.gameBoard[nextPositionColumn][nextPositionRow] == node.player) {
+					score *= count;
+					count++;
+					nextPositionRow++;
+					nextPositionColumn++;
+					
+					if(nextPositionRow < node.gameBoard.length || nextPositionColumn < node.gameBoard.length)
+						break;
+				}
+				
+				//Diagonally right to left
+				int rightRow = row;
+				int rightColumn = column;
+				while(node.gameBoard[rightColumn][rightRow] == node.player) {
+					score *= count;
+					count--;
+					rightRow++;
+					rightColumn++;
+					
+					if(rightRow < node.gameBoard.length || rightColumn < node.gameBoard.length)
+						break;
+				}
+			}
+		}
+		
+		return score;
+	}
+	
+	//returns the winning score
+	private int winningScore() {
+		
+		int scoreCount = 1; //its 1 bc if it would be 0 and we multiply it it would always be 0, so draw
+		
+		for(int i = 0; i < 5; i++) {
+			scoreCount *= 10;
+		}
+		
+		return scoreCount * 5;
+	}
+	
+	//minMax is a massive method, containing the miniMax algorithm
+	//it simulates the possible moves till a win or till max depth is reached
+	private int minMax(String player, int depth, int alpha, int beta) {
+		
+		Node node = new Node();
+		
+		
+		if(node.depth < 0 || node.depth > MAX_DEPTH) {
+			System.out.println("Wrong, number over or under the limit");
+		}
+		
+		
+		//if the simulation reached a point of winning it returns the value of winning for the CPU
+		if(checkWin(node, node.cpu) == true)
+			return winningScore() / depth; 
+			
+		//if the simulation reached a point of winning  it returns the value of winning for the Player
+		if(checkWin(node, node.cpu) == true)
+			return -winningScore() / depth;
+		
+		//gets all the possible moves (successor moves) if its empty return a 0 (a.k.a a draw)
+		List<Coordinates> list = getSuccessorMove(node);
+		if(list.isEmpty())
+			return 0;
+		
+		//or if the maxDepth is reached returned the current score
+		if(node.depth == MAX_DEPTH) 
+			return getScore(node);
+		
+		//Variable to hold the best move
+		Coordinates bestMove = null;
+		
+		if(node.player == "X") {
+			
+			for(int i = 0; i < list.size(); ++i) {
+				var cord = list.get(i);
+				
+				node.gameBoard[cord.getX()][cord.getY()] = node.player;
+				
+				int score = minMax(node.player, node.depth + 1, node.alpha, node.beta);
+				
+				//new best move have been found update it
+				if(score > alpha) {
+					alpha = score;
+					bestMove = cord;
+				}
+				
+				node.gameBoard[cord.getX()][cord.getY()] = node.player;
+			}
+			
+			cpuMove = bestMove;//saves best move for CPU in a global variable
+			
+			return alpha;//Returns best move for maximizing player alpha
+			
+		}else {
+			for(int i = 0; i < list.size(); ++i) {
+				var cord = list.get(i);
+				
+				//place the token on the board
+				node.gameBoard[cord.getX()][cord.getY()] = node.player;
+				
+				int score = minMax(node.player, node.depth + 1, node.alpha, node.beta);
+				
+				if(score < beta) {
+					beta = score;
+					bestMove = cord;
+				}
+				
+				node.gameBoard[cord.getX()][cord.getY()] = node.player;
+			}
+		}
+		
+		cpuMove = bestMove;//saves the best move
+		
+		return beta;//returns the lowest value
+	} 
+	
+	private Coordinates getCpuMove() {
+		return cpuMove;
+	}
+	
+	//makes the move
+	private boolean makeMove(Node node, String player, Coordinates cord) {
+		
+			setBoardValue(node, player, cord.getX(), cord.getY());
+			printBoard(node.gameBoard);
+			return true;
+	}
+	
+	//makes the cpu move and checks for win if no win then players turn again
+	private void cpuMove(Node node) {
+	
+		long start = System.currentTimeMillis();
+		minMax(node.cpu, node.depth, node.alpha, node.beta); 
+		System.out.println("Datorn valde " + node.gameBoard[0][1] + " på " + (System.currentTimeMillis() - start) + "ms");
+		makeMove(node, node.cpu, getCpuMove());
+		printBoard(node.gameBoard);
+		
+		if(checkWin(node, node.cpu) == true) 
+			System.out.println("Computer win");
+		else
+			playerMove(node);
+	}	
+
+	/*
+	 * Players move read the players input and display it on the board
+	 * Print out the board with the updates input and check for win
+	 * if no win was made its the computers turn to make a move
+	 */
+	private void playerMove(Node node) {
+		int[] player = readPlayerInput();
+		
+			node.gameBoard[player[0]][player[1]] = node.player; //puts the players token at the right place
+			printBoard(node.gameBoard);
+			if(checkWin(node, node.player) == true) 
+				System.out.println("You win");
+			else 			 
+				cpuMove(node);
+			//player = readPlayerInput();
+	}
+	
+	/*
+	 * This method runs the game play such as the showing the board
+	 * Getting the inputs and controls the AI
+	 */
+	private void run() {
+		Node node = new Node();
+		printBoard(node.gameBoard);
+		int player = getPlayerInput();
+		
+		if(player == 1) 
+			playerMove(node);
+		else 
+			cpuMove(node);
+		
+	}
+	
+	
+	/*
+	 * Main method runs the game
+	 */
+	public static void main(String[] args) {
+		Minimax m = new Minimax();
+		m.run();
+	}
+}
