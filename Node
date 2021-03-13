@@ -1,0 +1,28 @@
+
+
+public class Node {
+
+	String[][] gameBoard = new String[8][8];
+	String player = "O";
+	String cpu = "X"; 
+	Node parent;
+	int alpha;  
+	int beta;
+	int depth; 
+	
+	public Node(String[][] gameBoard, Node parent, int alpha, int depth, int beta, String player) {
+		this.gameBoard = gameBoard;
+		this.player = player;
+		this.parent = parent;
+		this.alpha = alpha;
+		this.beta = beta;
+		this.depth = depth;
+	}
+	
+	
+	//Default constructor
+	public Node(){}
+	
+	
+	
+}
