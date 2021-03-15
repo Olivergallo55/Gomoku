@@ -478,6 +478,6 @@ public class Minimax {
 	 */
 	public static void main(String[] args) {
 		Minimax m = new Minimax();
-		m.run();
+		m.run(); 
 	}
 }
