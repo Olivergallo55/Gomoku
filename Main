@@ -4,7 +4,7 @@ public class Minimax {
 	
 	private Scanner scan = new Scanner(System.in);
 	
-	private static int MAX_DEPTH = 4;
+	private static int MAX_DEPTH = 3;
 	private int[] cpuMove;
 
 	/*
@@ -205,14 +205,9 @@ public class Minimax {
 		return node.gameBoard[x][y];
 	}
 	
-	//TODO wierd stuff, dont put value in the right place
 	//sets the player in a specific location, used by the computer
 	private void setBoardValue(Node node, int[] cord, String player) {
-//		if(cord[0] > node.gameBoard.length - 1 || cord[1] > node.gameBoard.length - 1|| cord[0] < 0 || cord[1] < 0)
-//			throw new IllegalStateException();
-		
 		 node.gameBoard[cord[0]][cord[1]] = player;
-		 //printBoard(node.gameBoard);
 	}
 	 
 	//check for successor move (all possible moves) and the values around it
@@ -235,8 +230,7 @@ public class Minimax {
 		
 		return numberArray;
 	}
-	
-	
+
 	//check if there are any tokens near the value
 	private boolean hasAroundValue(Node node, int x, int y) {
 		return getBoardValue(node, x-1,y) == node.player ||
@@ -339,7 +333,6 @@ public class Minimax {
 		
 		return scoreCount * 5;
 	}
-
 	
 	//minMax is a massive method, containing the miniMax algorithm
 	//it simulates the possible moves till a win or till max depth is reached
@@ -388,8 +381,6 @@ public class Minimax {
 				
 				node.gameBoard[x][y] = null;
 				
-				if (depth == 0) {
-             }
 		}
 			
 			cpuMove = bestMove;//saves best move for CPU in a global variable
@@ -412,7 +403,8 @@ public class Minimax {
 					bestMove = cord;
 				}
 				
-				node.gameBoard[x][y] = null; 
+				node.gameBoard[x][y] = null;
+				
 			}
 		}
 		
@@ -438,8 +430,8 @@ public class Minimax {
 	
 		long start = System.currentTimeMillis();
 		minMax(node, node.cpu, 0, Node.ALPHA, Node.BETA); 
+		setBoardValue(node, getCpuMove(), node.cpu);
 		System.out.println("Datorn choosed place " + java.util.Arrays.toString(getCpuMove()) + " within " + (System.currentTimeMillis() - start) + "ms");
-		makeMove(node, node.cpu, getCpuMove());
 		printBoard(node.gameBoard);
 		
 		if(checkWin(node, node.cpu) == true) 
@@ -489,4 +481,3 @@ public class Minimax {
 		m.run();
 	}
 }
-
