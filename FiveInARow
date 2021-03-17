@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class Minimax {
+public class FiveInARow {
 	
 	private Scanner scan = new Scanner(System.in);
 	
@@ -353,7 +353,7 @@ public class Minimax {
 	 * @param node gives access to the gameboard and to the player
 	 * @return the cpu point decided by the playerscore
 	 * */
-	private int score(Node node) {
+	private int score(Node node, String player) {
 		int playerScore = getScore(node, node.player);
 		int cpuScore = getScore(node, node.cpu);
 		
@@ -385,11 +385,11 @@ public class Minimax {
 		
 		//if the simulation reached a point of winning it returns the value of winning for the CPU
 		if(checkWin(node, node.cpu) == true) 
-			return winningScore(node); 
+			return winningScore(node) / depth; //best score amount of moves for cpu
 			
 		//if the simulation reached a point of winning  it returns the value of winning for the Player
 		if(checkWin(node, node.player) == true)
-			return -winningScore(node) / depth;
+			return -winningScore(node) / depth;//best score for amount of moves for player
 		
 		//gets all the possible moves (successor moves) if its empty return a 0 (a.k.a a draw)
 		List<int[]> list = getSuccessorMove(node);
@@ -398,7 +398,7 @@ public class Minimax {
 		
 		//or if the maxDepth is reached returned the current score
 		if(depth == MAX_DEPTH) {
-			return score(node) / depth; 
+			return score(node, player) / depth; 
 		}
 		
 		//Variable to hold the best move 
@@ -463,6 +463,7 @@ public class Minimax {
 	
 	/*
 	 * getter for the best move
+	 * @return the global variable cpuMove
 	 * */
 	private int[] getCpuMove() {
 		return cpuMove;
@@ -534,7 +535,7 @@ public class Minimax {
 	 * Main method runs the game
 	 */
 	public static void main(String[] args) {
-		Minimax m = new Minimax();
+		FiveInARow m = new FiveInARow();
 		m.run();
 	}
 }
