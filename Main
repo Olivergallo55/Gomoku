@@ -4,7 +4,7 @@ public class Minimax {
 	
 	private Scanner scan = new Scanner(System.in);
 	
-	private static int MAX_DEPTH = 3;
+	private static int MAX_DEPTH = 4;
 	private int[] cpuMove;
 
 	/*
@@ -59,7 +59,7 @@ public class Minimax {
 	 * Method to check if there is a win
 	 */
 	private boolean checkWin(Node node, String player) {
-		return checkWinRow(node, node.player) == true || checkWinColumn(node, player) == true || checkWinDiagonal(node, player) == true ? true : false;
+		return checkWinRow(node, player) == true || checkWinColumn(node, player) == true || checkWinDiagonal(node, player) == true ? true : false;
 	}
 	
 	/*
@@ -130,13 +130,13 @@ public class Minimax {
 	 * @return true if there is 5 in a row for a player
 	 */
 	private boolean getWinDiagonalLeft(Node node, String player) {
-		
 		int count = 0;
-	    for (int k = node.gameBoard.length - 1; k > -1; k--) {
+	    for (int k = node.gameBoard.length; k > -1; k--) {
 	    	count = 0;//reset the counter
-	        for (int row = 0, col = k; row < node.gameBoard.length && col < node.gameBoard.length; row++, col++) {
+	        for (int row = 0, col = k; row < node.gameBoard.length && col < node.gameBoard[row].length && col > -1; row++, col--) {
 	            if(node.gameBoard[row][col] == player && count < 5) {
 	                ++count;
+	                System.out.println(count + " why dont i count?");
 	                if(count >= 5)
 	                    return true;
 	            }else {
@@ -144,6 +144,7 @@ public class Minimax {
 	            }
 	        }
 	    }
+	  //left to right upper part
 	    count = 0;
 	    for (int k = 1; k < node.gameBoard.length; k++) {
 	    	count = 0;//reset the counter
@@ -170,6 +171,7 @@ public class Minimax {
 	 */
 	private boolean getWinDiagonalRight(Node node, String player) {
 		 int count = 0;
+		 //upper part of right to left
 		    for (int k = 0; k < node.gameBoard.length; k++) {
 		    	count = 0;
 		        for (int row = k, col = 0; row >= 0 && col < node.gameBoard[row].length; row--, col++) {
@@ -183,6 +185,7 @@ public class Minimax {
 		        }
 		    }
 		    count = 0;
+		  //down part of right to left
 		    for (int k = 1; k < node.gameBoard.length; k++) {
 		    	count = 0;
 		        for (int row = node.gameBoard.length - 1, col = k; row >= 0 && col < node.gameBoard[row].length; row--, col++) {
@@ -198,31 +201,42 @@ public class Minimax {
 		    return false;
 	}
 	
-	//gets the value of the board
-	private String getBoardValue(Node node, int x, int y) {
-		if(x > node.gameBoard.length - 1 || y > node.gameBoard.length - 1|| x < 0 || y < 0)
-			return null;
-		return node.gameBoard[x][y];
-	}
-	
-	//sets the player in a specific location, used by the computer
+	/*
+	 * This method sets the players move on the board 
+	 * 
+	 * @param node gives access to the game board
+	 * @param cord is an int[] that holds the possible moves for both row and column (x,y) position
+	 * @param player is the player that will be put in the position
+	 */
 	private void setBoardValue(Node node, int[] cord, String player) {
 		 node.gameBoard[cord[0]][cord[1]] = player;
 	}
 	 
-	//check for successor move (all possible moves) and the values around it
+	/*
+	 * check for successor move (all possible moves) and saves it in an arrayList
+	 * 
+	 * @param node gives access to the game board
+	 * @return a list that hold all the free spaces on the board
+	 * */
 	private List<int[]> getSuccessorMove(Node node){
 		List<int[]> list= new ArrayList<>();
 		
 		for(int i = 0; i < node.gameBoard.length; i++) {
 			for(int j = 0; j < node.gameBoard.length; j++) {
-				if((node.gameBoard[i][j] == null))
+				if(node.gameBoard[i][j] == null)
 					list.add(addToSuccessorList(i,j));
 			}
 		}
 		return list;
 	}
 	
+	/*
+	 * SuccessorList ads all the values to an array and returns it
+	 * 
+	 * @param row for the game boards row
+	 * @param column for the game boards columns
+	 * @return numberArray which hold all the possible moves the computer can take
+	 */
 	private int[] addToSuccessorList(int row, int column) {
 		int[] numberArray = new int[2];
 		numberArray[0] = row;
@@ -231,41 +245,39 @@ public class Minimax {
 		return numberArray;
 	}
 
-	//check if there are any tokens near the value
-	private boolean hasAroundValue(Node node, int x, int y) {
-		return getBoardValue(node, x-1,y) == node.player ||
-			   getBoardValue(node, x-1,y) == node.cpu ||
-			   getBoardValue(node, x+1,y)== node.player ||
-			   getBoardValue(node, x+1,y) == node.cpu||
-			   getBoardValue(node, x,y+1)== node.player||
-			   getBoardValue(node, x,y+1) == node.cpu||
-			   getBoardValue(node, x,y-1)== node.player||
-			   getBoardValue(node, x,y-1) == node.cpu||
-			   getBoardValue(node, x+1,y+1)== node.player||
-			   getBoardValue(node, x+1,y+1) == node.cpu||
-			   getBoardValue(node, x-1,y-1)== node.player||
-			   getBoardValue(node, x-1,y-1) == node.cpu||
-			   getBoardValue(node, x+1,y-1)== node.player||
-			   getBoardValue(node, x+1,y-1) == node.cpu||
-			   getBoardValue(node, x-1,y+1)== node.player||
-			   getBoardValue(node, x-1,y+1) == node.cpu;
-	}
-
+	//gets the score
 	private int getScore(Node node, String player) {
 		int score = 1;//start score
+		int count;
 		
 		try {
 		//go through the matrix 
 		for(int row = 0; row < node.gameBoard.length; row++) {
-			int count = 1;
 			for(int column = 0; column < node.gameBoard.length; column++) {
 				int nextInRow = column;//to not to reset column
+				count = 1;
 				//go through vertically
 				while(node.gameBoard[nextInRow][row] == player) {
 					score *= count;//give point
-					count++;//count amount in the row
 					nextInRow++;//go to next position on the right
 					
+					if(count > 1) {
+						boolean before = false;
+						boolean after = false;
+						if(column > 0 && node.gameBoard[row][column-1].equals(null)) {
+							score += 50*count;
+							before = true;
+						}
+					if(nextInRow < node.gameBoard.length && node.gameBoard[row][nextInRow].equals(null)) {
+						score += 50*count;
+						after = true;
+					}
+					if(count == 4 && before || after) {
+						score += 5000;
+						}
+					}
+					count++;//count amount in the row
+
 					if(nextInRow < node.gameBoard.length)
 						break;
 				}
@@ -310,10 +322,11 @@ public class Minimax {
 						break;
 				}
 			}
-		}}catch(ArrayIndexOutOfBoundsException e){}
+		}
+	}catch(ArrayIndexOutOfBoundsException e){}
 		
 		return score;
-	}
+    }
 	
 	private int score(Node node, String player) {
 		int playerScore = getScore(node, node.player);
@@ -322,16 +335,20 @@ public class Minimax {
 		return cpuScore - playerScore;
 	}
 	
-	//returns the winning score
-	private int winningScore() {
+	/*
+	 * Calculates a winnings score
+	 * @param node that gives access to the game boards size
+	 * @return the score count times the boards size
+	 * */
+	private int winningScore(Node node) {
+		//its 1 bc if it would be 0 and we multiply it it would always be 0, so draw
+		int scoreCount = 1;
 		
-		int scoreCount = 10; //its 1 bc if it would be 0 and we multiply it it would always be 0, so draw
-		
-		for(int i = 0; i < 5; i++) {
+		for(int i = 0; i < node.gameBoard.length; i++) {
 			scoreCount *= 10;
 		}
 		
-		return scoreCount * 5;
+		return scoreCount * node.gameBoard.length;
 	}
 	
 	//minMax is a massive method, containing the miniMax algorithm
@@ -343,11 +360,11 @@ public class Minimax {
 		
 		//if the simulation reached a point of winning it returns the value of winning for the CPU
 		if(checkWin(node, node.cpu) == true) 
-			return winningScore() / depth; 
+			return winningScore(node) / depth; 
 			
 		//if the simulation reached a point of winning  it returns the value of winning for the Player
 		if(checkWin(node, node.player) == true)
-			return -winningScore() / depth;
+			return -winningScore(node) / depth;
 		
 		//gets all the possible moves (successor moves) if its empty return a 0 (a.k.a a draw)
 		List<int[]> list = getSuccessorMove(node);
@@ -355,8 +372,9 @@ public class Minimax {
 			return 0;
 		
 		//or if the maxDepth is reached returned the current score
-		if(depth == MAX_DEPTH) 
+		if(depth == MAX_DEPTH) {
 			return score(node, player) / depth; 
+		}
 		
 		//Variable to hold the best move 
 		int[] bestMove = null;
@@ -369,9 +387,9 @@ public class Minimax {
 				int y = cord[1];
 				
 				//problem variable
-				node.gameBoard[cord[0]][cord[1]] = player;
+				node.gameBoard[x][y] = player;
 				
-				int score = minMax(node, player, depth + 1, alpha, beta);
+				int score = minMax(node, node.player, depth + 1, alpha, beta);//dator
 				
 				//new best move have been found update it
 				if(score > alpha) {
@@ -379,8 +397,11 @@ public class Minimax {
 					bestMove = cord;
 				}
 				
-				node.gameBoard[x][y] = null;
+				node.gameBoard[x][y] = null;//restores the value
 				
+				//alpha beta pruning 
+				if(alpha >= beta)
+					break;
 		}
 			
 			cpuMove = bestMove;//saves best move for CPU in a global variable
@@ -394,9 +415,9 @@ public class Minimax {
 				int y = cord[1];
 				
 				//place the token on the board
-				node.gameBoard[x][y] = player;
+				node.gameBoard[x][y] = node.player;
 				
-				int score = minMax(node, player, depth + 1, alpha, beta);
+				int score = minMax(node, node.cpu, depth + 1, alpha, beta);//spelare
 				
 				if(score < beta) {
 					beta = score;
@@ -404,7 +425,9 @@ public class Minimax {
 				}
 				
 				node.gameBoard[x][y] = null;
-				
+
+				if(alpha >= beta)
+					break;
 			}
 		}
 		
@@ -413,25 +436,25 @@ public class Minimax {
 		return beta;//returns the lowest value
 	} 
 	
+	/*
+	 * getter for the best move
+	 * */
 	private int[] getCpuMove() {
 		return cpuMove;
 	}
 	
-	//makes the move
-	private boolean makeMove(Node node, String player, int[] cord) {
-		
-			setBoardValue(node, cord, player);
-			printBoard(node.gameBoard);
-			return true;
-	}
-	
-	//makes the cpu move and checks for win if no win then players turn again
+	/*
+	 * The computers move, it uses the minMax method to calculate the best position and puts it there
+	 * with the setBoardValue method, it prints out the updated board and checks for win, if there was no win its the players turn
+	 * 
+	 * @param node gives access to the Node class
+	 * */
 	private void cpuMove(Node node) {
 	
 		long start = System.currentTimeMillis();
 		minMax(node, node.cpu, 0, Node.ALPHA, Node.BETA); 
 		setBoardValue(node, getCpuMove(), node.cpu);
-		System.out.println("Datorn choosed place " + java.util.Arrays.toString(getCpuMove()) + " within " + (System.currentTimeMillis() - start) + "ms");
+		System.out.println("Datorn choosed place " + Arrays.toString(getCpuMove()) + " within " + (System.currentTimeMillis() - start) + "ms");
 		printBoard(node.gameBoard);
 		
 		if(checkWin(node, node.cpu) == true) 
@@ -448,13 +471,22 @@ public class Minimax {
 	private void playerMove(Node node) {
 		int[] player = readPlayerInput();
 		
+		if(node.gameBoard[player[0]][player[1]] == null)
 			node.gameBoard[player[0]][player[1]] = node.player; //puts the players token at the right place
+		else {
+			System.out.println(" cant place it there");
+			playerMove(node);
+		}
+			
 			printBoard(node.gameBoard);
 			if(checkWin(node, node.player) == true) 
 				System.out.println("You win");
-			else 			 
-				cpuMove(node);
+			else 
+				playerMove(node); 
+				//cpuMove(node);
+			
 	}
+	
 	
 	/*
 	 * This method runs the game play such as the showing the board
@@ -473,11 +505,12 @@ public class Minimax {
 	}
 	
 	
+	
 	/*
 	 * Main method runs the game
 	 */
 	public static void main(String[] args) {
 		Minimax m = new Minimax();
-		m.run(); 
+		m.run();
 	}
 }
