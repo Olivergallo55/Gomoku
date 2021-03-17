@@ -130,26 +130,26 @@ public class Minimax {
 	 * @return true if there is 5 in a row for a player
 	 */
 	private boolean getWinDiagonalLeft(Node node, String player) {
+		 //left to right down part
 		int count = 0;
-	    for (int k = node.gameBoard.length; k > -1; k--) {
-	    	count = 0;//reset the counter
-	        for (int row = 0, col = k; row < node.gameBoard.length && col < node.gameBoard[row].length && col > -1; row++, col--) {
-	            if(node.gameBoard[row][col] == player && count < 5) {
-	                ++count;
-	                System.out.println(count + " why dont i count?");
-	                if(count >= 5)
-	                    return true;
-	            }else {
-	                count = 0;
-	            }
-	        }
+		    for (int k = 0; k < node.gameBoard.length; k++) {
+		    	count = 0;//reset the counter
+		        for (int row = k, col = 0; row <node.gameBoard.length && col < node.gameBoard[row].length; row++, col++) {
+		            if(node.gameBoard[col][row] == player && count < 5) {
+		                ++count;
+		                if(count >= 5)
+		                    return true;
+		            }else {
+		                count = 0;
+		            }
+		        }
 	    }
-	  //left to right upper part
+	  //left to right down part
 	    count = 0;
 	    for (int k = 1; k < node.gameBoard.length; k++) {
 	    	count = 0;//reset the counter
 	        for (int row = k, col = 0; row <node.gameBoard.length && col < node.gameBoard[row].length; row++, col++) {
-	            if(node.gameBoard[col][row] == player && count < 5) {
+	            if(node.gameBoard[row][col] == player && count < 5) {
 	                ++count;
 	                if(count >= 5)
 	                    return true;
@@ -245,7 +245,13 @@ public class Minimax {
 		return numberArray;
 	}
 
-	//gets the score
+	/*
+	 * Method to count the score, it counts higher score the more you have in a row
+	 * @param node gives access to the game board
+	 * @param player is the players token
+	 * 
+	 * @return the collected score
+	 * */
 	private int getScore(Node node, String player) {
 		int score = 1;//start score
 		int count;
@@ -256,7 +262,7 @@ public class Minimax {
 			for(int column = 0; column < node.gameBoard.length; column++) {
 				int nextInRow = column;//to not to reset column
 				count = 1;
-				//go through vertically
+				//go through horizontally
 				while(node.gameBoard[nextInRow][row] == player) {
 					score *= count;//give point
 					nextInRow++;//go to next position on the right
@@ -264,11 +270,11 @@ public class Minimax {
 					if(count > 1) {
 						boolean before = false;
 						boolean after = false;
-						if(column > 0 && node.gameBoard[row][column-1].equals(null)) {
+						if(column > 0 && node.gameBoard[nextInRow-2][row] == null) {
 							score += 50*count;
 							before = true;
 						}
-					if(nextInRow < node.gameBoard.length && node.gameBoard[row][nextInRow].equals(null)) {
+					if(nextInRow < node.gameBoard.length && node.gameBoard[nextInRow][row] == null) {
 						score += 50*count;
 						after = true;
 					}
@@ -278,19 +284,35 @@ public class Minimax {
 					}
 					count++;//count amount in the row
 
-					if(nextInRow < node.gameBoard.length)
+					if(!(nextInRow < node.gameBoard.length))
 						break;
 				}
 				
-				try {
-				//go through horizontally
+				//go through vertical
 				int nextInColumn = row;
 				while(node.gameBoard[column][nextInColumn] == player) {
 					score *= count;
-					count++;
 					nextInColumn++;
+					
+					if(count > 1) {
+						boolean before = false;
+						boolean after = false;
+						
+						if(column > 0 && node.gameBoard[column][nextInColumn-2] == null) {
+							score += 50*count;
+							before = true;
+						}
+						 if(nextInColumn < node.gameBoard.length && node.gameBoard[column][nextInColumn] == null) {
+							score = 50*count;
+							after = true;
+						}
+						 if(count == 4 && before && after)
+							score += 5000;
+					}
 				
-					if(nextInColumn < node.gameBoard.length)
+					count++;
+					
+					if(!(nextInColumn < node.gameBoard.length))
 						break;
 				}
 				
@@ -306,29 +328,32 @@ public class Minimax {
 					if(nextPositionRow < node.gameBoard.length || nextPositionColumn < node.gameBoard.length)
 						break;
 				}
-			}catch(ArrayIndexOutOfBoundsException e){
-			}
 				
 				//Diagonally right to left
 				int rightRow = row;
 				int rightColumn = column;
 				while(node.gameBoard[rightColumn][rightRow] == player) {
 					score *= count;
-					count--;
+					count++;
 					rightRow++;
-					rightColumn++;
+					rightColumn--;
 					
 					if(rightRow < node.gameBoard.length || rightColumn < node.gameBoard.length)
 						break;
 				}
 			}
 		}
-	}catch(ArrayIndexOutOfBoundsException e){}
-		
+	}catch(IndexOutOfBoundsException e) {}
 		return score;
     }
 	
-	private int score(Node node, String player) {
+	/*
+	 * Takes the score from player and cpu and devides the two
+	 * 
+	 * @param node gives access to the gameboard and to the player
+	 * @return the cpu point decided by the playerscore
+	 * */
+	private int score(Node node) {
 		int playerScore = getScore(node, node.player);
 		int cpuScore = getScore(node, node.cpu);
 		
@@ -360,7 +385,7 @@ public class Minimax {
 		
 		//if the simulation reached a point of winning it returns the value of winning for the CPU
 		if(checkWin(node, node.cpu) == true) 
-			return winningScore(node) / depth; 
+			return winningScore(node); 
 			
 		//if the simulation reached a point of winning  it returns the value of winning for the Player
 		if(checkWin(node, node.player) == true)
@@ -373,7 +398,7 @@ public class Minimax {
 		
 		//or if the maxDepth is reached returned the current score
 		if(depth == MAX_DEPTH) {
-			return score(node, player) / depth; 
+			return score(node) / depth; 
 		}
 		
 		//Variable to hold the best move 
@@ -482,11 +507,10 @@ public class Minimax {
 			if(checkWin(node, node.player) == true) 
 				System.out.println("You win");
 			else 
-				playerMove(node); 
-				//cpuMove(node);
+				//playerMove(node); 
+				cpuMove(node);
 			
 	}
-	
 	
 	/*
 	 * This method runs the game play such as the showing the board
@@ -499,12 +523,12 @@ public class Minimax {
 		
 		if(player == 1) 
 			playerMove(node);
+		else if(getSuccessorMove(node).isEmpty()) {
+			System.out.println("its a draw");return;}
 		else 
 			cpuMove(node);
-		
+	
 	}
-	
-	
 	
 	/*
 	 * Main method runs the game
